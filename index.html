@@ -79,6 +79,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- Already Taken Screen -->
+        <div id="already-taken-screen" class="hidden bg-white p-8 rounded-2xl shadow-lg text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Quiz Already Completed</h1>
+            <p class="text-gray-600 mb-6">You have already taken this quiz. Here are your results:</p>
+            <p class="text-gray-700 text-lg mb-2"><strong>Name:</strong> <span id="stored-result-name"></span></p>
+            <p class="text-gray-700 text-lg mb-2"><strong>Section:</strong> <span id="stored-result-section"></span></p>
+            <p class="text-gray-700 text-lg mb-6"><strong>Time Taken:</strong> <span id="stored-time-taken"></span></p>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-6">
+                <p class="text-xl text-gray-800">Your Score:</p>
+                <p class="text-5xl font-extrabold text-blue-700 my-2"><span id="stored-final-score"></span> / <span id="stored-total-score"></span></p>
+            </div>
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-8">
+                 <p class="text-lg text-red-700"><strong>Tab Switches:</strong> <span id="stored-result-tab-switches" class="font-bold"></span></p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -247,6 +263,7 @@
         const startScreen = document.getElementById('start-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
+        const alreadyTakenScreen = document.getElementById('already-taken-screen');
         const userForm = document.getElementById('user-form');
         const questionNumberEl = document.getElementById('question-number');
         const totalQuestionsEl = document.getElementById('total-questions');
@@ -257,6 +274,25 @@
         const submitBtn = document.getElementById('submit-btn');
         const tabSwitchCountEl = document.getElementById('tab-switch-count');
         const tabSwitchAlertEl = document.getElementById('tab-switch-alert');
+
+        // Check if quiz was already taken on page load
+        function checkQuizStatus() {
+            const quizCompleted = localStorage.getItem('milQuizCompleted');
+            if (quizCompleted === 'true') {
+                const results = JSON.parse(localStorage.getItem('milQuizResults'));
+                if (results) {
+                    startScreen.classList.add('hidden');
+                    alreadyTakenScreen.classList.remove('hidden');
+
+                    document.getElementById('stored-result-name').textContent = results.fullname;
+                    document.getElementById('stored-result-section').textContent = results.section;
+                    document.getElementById('stored-time-taken').textContent = results.timeTaken;
+                    document.getElementById('stored-final-score').textContent = results.score;
+                    document.getElementById('stored-total-score').textContent = results.totalScore;
+                    document.getElementById('stored-result-tab-switches').textContent = results.tabSwitches;
+                }
+            }
+        }
 
         // Event listener for tab switching
         document.addEventListener('visibilitychange', () => {
@@ -360,14 +396,30 @@
             const minutes = Math.floor(timeDiff / 60);
             const seconds = timeDiff % 60;
             const formattedTime = `${minutes}m ${seconds}s`;
+            const totalScore = quizData.length * 2;
 
             document.getElementById('result-name').textContent = userInfo.fullname;
             document.getElementById('result-section').textContent = userInfo.section;
             document.getElementById('time-taken').textContent = formattedTime;
             document.getElementById('final-score').textContent = score;
-            document.getElementById('total-score').textContent = quizData.length * 2;
+            document.getElementById('total-score').textContent = totalScore;
             document.getElementById('result-tab-switches').textContent = tabSwitchCounter;
+
+            // Save results to localStorage
+            const resultsToStore = {
+                fullname: userInfo.fullname,
+                section: userInfo.section,
+                timeTaken: formattedTime,
+                score: score,
+                totalScore: totalScore,
+                tabSwitches: tabSwitchCounter
+            };
+            localStorage.setItem('milQuizCompleted', 'true');
+            localStorage.setItem('milQuizResults', JSON.stringify(resultsToStore));
         }
+
+        // Call the function to check status when the script loads
+        checkQuizStatus();
 
     </script>
 </body>
