@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media and Information Literacy Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-option {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .quiz-option.selected {
+            background-color: #3b82f6; /* bg-blue-500 */
+            border-color: #2563eb; /* border-blue-600 */
+            color: white;
+        }
+        .quiz-option:hover {
+            background-color: #dbeafe; /* bg-blue-100 */
+        }
+        .quiz-option.selected:hover {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div id="app-container" class="w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+
+        <!-- User Info Screen -->
+        <div id="start-screen" class="bg-white p-8 rounded-2xl shadow-lg text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Media & Information Literacy Quiz</h1>
+            <p class="text-gray-600 mb-6">Please enter your details to begin the quiz.</p>
+            <form id="user-form" class="space-y-4">
+                <input type="text" id="fullname" placeholder="Enter your full name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="text" id="section" placeholder="Enter your section" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">Start Quiz</button>
+            </form>
+             <p class="text-sm text-red-500 mt-6 font-semibold">Important: Please do not switch tabs or windows while taking the quiz. Doing so will be recorded.</p>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Question <span id="question-number"></span>/<span id="total-questions"></span></h2>
+                    <div id="tab-switch-alert" class="text-red-500 font-semibold text-sm hidden">
+                        Tab switch detected! Count: <span id="tab-switch-count">0</span>
+                    </div>
+                </div>
+                <p id="question-text" class="text-lg text-gray-700 mb-6 min-h-[60px]"></p>
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be injected here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-400 transition-colors duration-300">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">Next</button>
+                    <button id="submit-btn" class="hidden bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-md">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden">
+            <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 mb-4">Quiz Completed!</h1>
+                <p class="text-gray-700 text-lg mb-2"><strong>Name:</strong> <span id="result-name"></span></p>
+                <p class="text-gray-700 text-lg mb-2"><strong>Section:</strong> <span id="result-section"></span></p>
+                <p class="text-gray-700 text-lg mb-6"><strong>Time Taken:</strong> <span id="time-taken"></span></p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mb-6">
+                    <p class="text-xl text-gray-800">Your Score:</p>
+                    <p class="text-5xl font-extrabold text-blue-700 my-2"><span id="final-score"></span> / <span id="total-score"></span></p>
+                </div>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-8">
+                     <p class="text-lg text-red-700"><strong>Tab Switches:</strong> <span id="result-tab-switches" class="font-bold"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Which of the following best describes a loop?",
+                options: ["Establishes rules that need to be met before an action", "Commands an action to be repeated multiple times", "Initiates an action", "Causes actions to stop"],
+                answer: "Commands an action to be repeated multiple times"
+            },
+            {
+                question: "Media and Information Literacy is intended for which audience?",
+                options: ["Academicians", "Authors and Journalist", "General Public", "Students"],
+                answer: "General Public"
+            },
+            {
+                question: "Which of the following is an example of media?",
+                options: ["Store tablet", "Artificial intelligence", "Newspaper", "All of the Above"],
+                answer: "All of the Above"
+            },
+            {
+                question: "Which of the following is an example of media's influence on education?",
+                options: ["Khan Academy", "Lazada", "Facebook groups", "Livestream of SONA"],
+                answer: "Khan Academy"
+            },
+            {
+                question: "Which of the following is an example of media's influence on the economy?",
+                options: ["Khan Academy", "Lazada", "Facebook groups", "Livestream of SONA"],
+                answer: "Lazada"
+            },
+            {
+                question: "Under which category does 'mise en scène' fall?",
+                options: ["Conventions", "Language", "Symbolic Codes", "Technical Codes"],
+                answer: "Symbolic Codes"
+            },
+            {
+                question: "Which of the following is a primary source?",
+                options: ["Book", "Article", "Newspaper", "Word of mouth"],
+                answer: "Word of mouth"
+            },
+            {
+                question: "What is the main benefit of media on society?",
+                options: ["Access to diverse content", "Allows Greater involvement between the public and authoritative figures", "Faster and easier means of communication and sharing of ideas", "Gives opportunities to small and big enterprises"],
+                answer: "Faster and easier means of communication and sharing of ideas"
+            },
+            {
+                question: "Under what category does a robot fall?",
+                options: ["Artificial intelligence", "Massive open online courses", "Wearable technology", "3D technology"],
+                answer: "Artificial intelligence"
+            },
+            {
+                question: "What is the main benefit of media on the economy?",
+                options: ["Access to diverse content", "Allows Greater involvement between the public and authoritative figures", "Faster and easier means of communication and sharing of ideas", "Gives opportunities to small and big enterprises"],
+                answer: "Gives opportunities to small and big enterprises"
+            },
+            {
+                question: "Which citation style is used when citing literature and sources for humanities?",
+                options: ["APA", "MLA", "OSA", "Turabian"],
+                answer: "MLA"
+            },
+            {
+                question: "Under which category does camerawork fall?",
+                options: ["Conventions", "Language", "Symbolic codes", "Technical Codes"],
+                answer: "Technical Codes"
+            },
+            {
+                question: "Under what era do the years 1919 to 2019 fall?",
+                options: ["Ancient", "Electronic", "Industrial", "Prehistoric"],
+                answer: "Electronic"
+            },
+            {
+                question: "Which of the codes are responsible for establishing rules that must be met to perform a specific action?",
+                options: ["Conditionals", "Loops", "Repeats", "Variables"],
+                answer: "Conditionals"
+            },
+            {
+                question: "Under which category does an Apple Watch fall?",
+                options: ["Artificial intelligence", "Massive open online courses", "Wearable technology", "3D technology"],
+                answer: "Wearable technology"
+            },
+            {
+                question: "How can media negatively affect politics?",
+                options: ["Individuals may share multiple views and opinions", "Political figures may be exposed to the public", "Slander and fake news may proliferate", "Information about politics and it's system may be exposed to the public"],
+                answer: "Slander and fake news may proliferate"
+            },
+            {
+                question: "What is the major concern in artificial intelligence?",
+                options: ["Understanding of AI is too limited", "AI may replace human labor", "We may not be able to maintain the technology needed for AI", "AI may not be efficient with work and may not be cost-effective"],
+                answer: "AI may replace human labor"
+            },
+            {
+                question: "Choose the answer that best fits the analogy below. Influence on education : Access :: Influence on economy : ___",
+                options: ["Ratings", "Voting", "Collaboration", "Community"],
+                answer: "Ratings"
+            },
+            {
+                question: "How can media negatively affect the economy?",
+                options: ["Media increase the cost of running a business", "New media may replace manual labor and displace jobs", "Media may cause business to sell less.", "Small business may use new media more that traditional advertising"],
+                answer: "New media may replace manual labor and displace jobs"
+            },
+            {
+                question: "How are massive open online courses different from regular courses?",
+                options: ["Massive online courses cater to large classes without physical barriers", "Regular courses offer a higher level of education", "Massive open online courses do not require an instructor", "Massive open online courses have no limit to the number of students enrolled"],
+                answer: "Massive online courses cater to large classes without physical barriers"
+            },
+            {
+                question: "Which of the following is NOT included when evaluating information sources?",
+                options: ["Author", "Fairness", "Length", "Relevance"],
+                answer: "Length"
+            },
+            {
+                question: "Choose the word that makes the statement FALSE: 'Literacy is the ability to read effectively.'",
+                options: ["Literacy", "Fairness", "Length", "Relevance"],
+                answer: "Fairness"
+            },
+            {
+                question: "Choose the best answer that best fits the analogy below. Electronic Era : Computer :: Industrial Era : ___",
+                options: ["Alphabet", "Non-verbal", "Psychological", "Verbal"],
+                answer: "Verbal"
+            },
+            {
+                question: "Which of the following is NOT a media language?",
+                options: ["Aural", "Non-verbal", "Psychological", "Verbal"],
+                answer: "Aural"
+            },
+            {
+                question: "Choose the answer that best fits the analogy below. Industrial Era: Printing press :: Ancient Era : ___",
+                options: ["Body Art", "Dance", "Drama", "Dry Plates"],
+                answer: "Drama"
+            },
+            {
+                question: "Which of the following is a convention used in photography?",
+                options: ["Character arc", "Point of view", "Title", "Structure of time"],
+                answer: "Point of view"
+            },
+            {
+                question: "Choose the answer that makes the statement below FALSE. 'The nature of indigenous knowledge allows information transfer to be accurate.'",
+                options: ["Accurate", "Indigenous", "Transfer", "Information"],
+                answer: "Accurate"
+            },
+            {
+                question: "Choose the word that makes the statement FALSE. 'Information refers to the raw facts and figures'",
+                options: ["Facts", "Figures", "Information", "Refers"],
+                answer: "Information"
+            },
+            {
+                question: "Choose the answer that best fits the analogy below. Indigenous Knowledge : Oral Instructions :: Library : ___",
+                options: ["Films", "Illustrative records", "Livestreams", "Social events"],
+                answer: "Films"
+            },
+            {
+                question: "Which of following is NOT a symbolic code?",
+                options: ["Audio", "Color", "Mise en scAne", "Setting"],
+                answer: "Audio"
+            }
+        ];
+
+        // App state
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(quizData.length).fill(null);
+        let score = 0;
+        let tabSwitchCounter = 0;
+        let userInfo = {};
+        let startTime;
+
+        // DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const userForm = document.getElementById('user-form');
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const tabSwitchCountEl = document.getElementById('tab-switch-count');
+        const tabSwitchAlertEl = document.getElementById('tab-switch-alert');
+
+        // Event listener for tab switching
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && quizScreen.style.display !== 'hidden') {
+                tabSwitchCounter++;
+                tabSwitchCountEl.textContent = tabSwitchCounter;
+                tabSwitchAlertEl.classList.remove('hidden');
+            }
+        });
+
+        // Start Quiz
+        userForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fullname = document.getElementById('fullname').value;
+            const section = document.getElementById('section').value;
+            if (fullname && section) {
+                userInfo = { fullname, section };
+                startTime = new Date(); // Start timer
+                startScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                totalQuestionsEl.textContent = quizData.length;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        function loadQuestion(index) {
+            const question = quizData[index];
+            questionNumberEl.textContent = index + 1;
+            questionTextEl.textContent = question.question;
+            optionsContainerEl.innerHTML = '';
+
+            question.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('quiz-option', 'w-full', 'p-4', 'border-2', 'rounded-lg', 'text-left', 'text-gray-700', 'font-medium');
+                if (userAnswers[index] === option) {
+                    button.classList.add('selected');
+                }
+                button.onclick = () => selectOption(button, option);
+                optionsContainerEl.appendChild(button);
+            });
+            updateNavigation();
+        }
+        
+        function selectOption(buttonEl, option) {
+            userAnswers[currentQuestionIndex] = option;
+            // Deselect other options
+            const allOptions = optionsContainerEl.querySelectorAll('.quiz-option');
+            allOptions.forEach(btn => btn.classList.remove('selected'));
+            // Select clicked option
+            buttonEl.classList.add('selected');
+        }
+
+        function updateNavigation() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            prevBtn.classList.toggle('opacity-50', currentQuestionIndex === 0);
+
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            calculateScore();
+            showResults();
+        });
+
+        function calculateScore() {
+            score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === quizData[index].answer) {
+                    score += 2;
+                }
+            });
+        }
+        
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const endTime = new Date();
+            const timeDiff = Math.round((endTime - startTime) / 1000); // in seconds
+            const minutes = Math.floor(timeDiff / 60);
+            const seconds = timeDiff % 60;
+            const formattedTime = `${minutes}m ${seconds}s`;
+
+            document.getElementById('result-name').textContent = userInfo.fullname;
+            document.getElementById('result-section').textContent = userInfo.section;
+            document.getElementById('time-taken').textContent = formattedTime;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('total-score').textContent = quizData.length * 2;
+            document.getElementById('result-tab-switches').textContent = tabSwitchCounter;
+        }
+
+    </script>
+</body>
+</html>
+
